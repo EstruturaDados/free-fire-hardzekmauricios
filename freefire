@@ -11,22 +11,21 @@
 // Struct principal do sistema
 // -------------------------------------------------------
 typedef struct {
-    char nome[TAM_NOME];
-    char tipo[TAM_TIPO];
-    int prioridade;
+    char nome[TAM_NOME];   // Nome do componente (ex: "chip central")
+    char tipo[TAM_TIPO];   // Tipo do componente (ex: "controle", "suporte")
+    int prioridade;        // Prioridade (1 a 10)
 } Componente;
 
 // -------------------------------------------------------
-// Variáveis globais de medição de desempenho
+// Variável global para contar comparações de cada algoritmo
 // -------------------------------------------------------
-// Contador de comparações feito pelo algoritmo atual
 long long contadorComparacoes = 0;
 
 // -------------------------------------------------------
 // Funções auxiliares
 // -------------------------------------------------------
 
-// Remove o '\n' que o fgets armazena no final da string
+// Remove '\n' que o fgets guarda no final da string, se existir
 void removerQuebraLinha(char *str) {
     size_t len = strlen(str);
     if (len > 0 && str[len - 1] == '\n') {
@@ -34,31 +33,32 @@ void removerQuebraLinha(char *str) {
     }
 }
 
-// Lê um inteiro de forma segura, consumindo o '\n' restante
+// Lê um inteiro de forma simples e consome o '\n' restante
 int lerInteiro() {
     int valor;
     scanf("%d", &valor);
-    getchar(); // consome o '\n' deixado no buffer
+    getchar(); // consome o '\n' que ficou no buffer
     return valor;
 }
 
-// Exibe todos os componentes
+// Exibe todos os componentes cadastrados
 void mostrarComponentes(Componente v[], int n) {
     int i;
-    printf("\n--- Lista de componentes ---\n");
+    printf("\n--- Lista de componentes cadastrados ---\n");
     for (i = 0; i < n; i++) {
         printf("%2d) Nome: %-25s | Tipo: %-15s | Prioridade: %d\n",
                i + 1, v[i].nome, v[i].tipo, v[i].prioridade);
     }
-    printf("----------------------------\n");
+    printf("----------------------------------------\n");
 }
 
 // -------------------------------------------------------
 // Algoritmos de ordenação
+// Cada um retorna o tempo de execução em segundos (double)
+// e usa a variável global contadorComparacoes
 // -------------------------------------------------------
 
 // Bubble sort por NOME (string)
-// Retorna o tempo de execução em segundos (double)
 double bubbleSortNome(Componente v[], int n) {
     clock_t inicio = clock();
     contadorComparacoes = 0;
@@ -78,18 +78,17 @@ double bubbleSortNome(Componente v[], int n) {
                 trocou = 1;
             }
         }
-        if (!trocou) { // lista já ordenada
+        // Otimização: se não houve troca, já está ordenado
+        if (!trocou) {
             break;
         }
     }
 
     clock_t fim = clock();
-    double tempo = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    return tempo;
+    return (double)(fim - inicio) / CLOCKS_PER_SEC;
 }
 
 // Insertion sort por TIPO (string)
-// Retorna o tempo de execução em segundos
 double insertionSortTipo(Componente v[], int n) {
     clock_t inicio = clock();
     contadorComparacoes = 0;
@@ -101,26 +100,24 @@ double insertionSortTipo(Componente v[], int n) {
         chave = v[i];
         j = i - 1;
 
-        // Enquanto j >= 0 e v[j].tipo > chave.tipo
+        // Enquanto j >= 0 e v[j].tipo > chave.tipo (ordem alfabética)
         while (j >= 0) {
             contadorComparacoes++;
             if (strcmp(v[j].tipo, chave.tipo) > 0) {
                 v[j + 1] = v[j];
                 j--;
             } else {
-                break;
+                break; // posição correta encontrada
             }
         }
         v[j + 1] = chave;
     }
 
     clock_t fim = clock();
-    double tempo = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    return tempo;
+    return (double)(fim - inicio) / CLOCKS_PER_SEC;
 }
 
 // Selection sort por PRIORIDADE (int)
-// Retorna o tempo de execução em segundos
 double selectionSortPrioridade(Componente v[], int n) {
     clock_t inicio = clock();
     contadorComparacoes = 0;
@@ -144,26 +141,25 @@ double selectionSortPrioridade(Componente v[], int n) {
     }
 
     clock_t fim = clock();
-    double tempo = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    return tempo;
+    return (double)(fim - inicio) / CLOCKS_PER_SEC;
 }
 
 // -------------------------------------------------------
-// Busca binária por NOME (apenas após ordenar por nome)
+// Busca binária por NOME (após ordenar por nome)
 // -------------------------------------------------------
-// Retorna o índice do elemento encontrado ou -1
+// Retorna o índice do elemento encontrado ou -1 se não achar
 int buscaBinariaPorNome(Componente v[], int n, char chave[]) {
-    int ini = 0, fim = n - 1;
+    int ini = 0;
+    int fim = n - 1;
     int meio;
     int comparacao;
 
     while (ini <= fim) {
         meio = (ini + fim) / 2;
-
         comparacao = strcmp(chave, v[meio].nome);
 
         if (comparacao == 0) {
-            return meio; // achou
+            return meio;  // encontrado
         } else if (comparacao < 0) {
             fim = meio - 1;
         } else {
@@ -171,30 +167,33 @@ int buscaBinariaPorNome(Componente v[], int n, char chave[]) {
         }
     }
 
-    return -1; // não achou
+    return -1; // não encontrado
 }
 
 // -------------------------------------------------------
-// Função genérica para medir tempo de um algoritmo
-// (opcional, pode ser usada para testes extras)
+// (Opcional) Função genérica de medição de tempo
+// Exemplo de assinatura pedida no enunciado
 // -------------------------------------------------------
-/*
-double medirTempo(void (*algoritmo)(Componente[], int), Componente v[], int n) {
-    clock_t inicio = clock();
-    algoritmo(v, n);
-    clock_t fim = clock();
-    return (double)(fim - inicio) / CLOCKS_PER_SEC;
-}
-*/
+//
+// double medirTempo(void (*algoritmo)(Componente[], int), Componente v[], int n) {
+//     clock_t inicio = clock();
+//     algoritmo(v, n);
+//     clock_t fim = clock();
+//     return (double)(fim - inicio) / CLOCKS_PER_SEC;
+// }
+//
+// Aqui não usamos diretamente porque cada sort já
+// retorna o tempo e manipula contadorComparacoes.
+// -------------------------------------------------------
 
 // -------------------------------------------------------
-// Função principal (menu e fluxo do jogo)
+// Função principal (menu e fluxo do "jogo")
 // -------------------------------------------------------
 int main() {
     Componente componentes[MAX_COMPONENTES];
     int qtd = 0;
     int opcao;
-    int ordenadoPorNome = 0; // flag para saber se podemos usar busca binária
+    int ordenadoPorNome = 0;  // flag: 1 se a lista estiver ordenada por nome
 
     printf("===== Torre de Fuga - Modulo de Organizacao Avancado =====\n\n");
 
@@ -227,7 +226,7 @@ int main() {
         } while (componentes[i].prioridade < 1 || componentes[i].prioridade > 10);
     }
 
-    // Loop principal do menu
+    // 2) Loop principal do menu
     do {
         printf("\n===== MENU PRINCIPAL =====\n");
         printf("1 - Mostrar componentes\n");
@@ -246,7 +245,7 @@ int main() {
 
             case 2: {
                 double tempo = bubbleSortNome(componentes, qtd);
-                ordenadoPorNome = 1;
+                ordenadoPorNome = 1;  // agora está em ordem por nome
                 printf("\nComponentes ordenados por NOME (Bubble Sort).\n");
                 printf("Comparacoes realizadas: %lld\n", contadorComparacoes);
                 printf("Tempo de execucao: %.6f segundos\n", tempo);
@@ -256,7 +255,7 @@ int main() {
 
             case 3: {
                 double tempo = insertionSortTipo(componentes, qtd);
-                ordenadoPorNome = 0; // perdeu garantia de ordenacao por nome
+                ordenadoPorNome = 0;  // perdeu garantia de ordenacao por nome
                 printf("\nComponentes ordenados por TIPO (Insertion Sort).\n");
                 printf("Comparacoes realizadas: %lld\n", contadorComparacoes);
                 printf("Tempo de execucao: %.6f segundos\n", tempo);
@@ -266,7 +265,7 @@ int main() {
 
             case 4: {
                 double tempo = selectionSortPrioridade(componentes, qtd);
-                ordenadoPorNome = 0; // perdeu garantia de ordenacao por nome
+                ordenadoPorNome = 0;  // perdeu garantia de ordenacao por nome
                 printf("\nComponentes ordenados por PRIORIDADE (Selection Sort).\n");
                 printf("Comparacoes realizadas: %lld\n", contadorComparacoes);
                 printf("Tempo de execucao: %.6f segundos\n", tempo);
